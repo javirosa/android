@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PassTime</string>
+    <string name="recording">Time Passes</string>
+    <color name="transparent">#17170445</color>
+    <string name="playing">Playing</string>
+    <string name="pressButton">Press Button</string>
+    <string name="OK">OK</string>
+    <string name="alertMsg">This application helps you pass time.\nBy Javier Rosa</string>
+</resources>
