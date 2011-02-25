@@ -1,10 +1,16 @@
 package com.manmachinesoftware.BasicRecorder;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.media.MediaRecorder;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Chronometer;
@@ -30,6 +36,7 @@ enum RecordingState {
 
 
 public class BasicRecorder extends Activity {
+	static MediaRecorder mRec = null;
 	RecordingState state = RecordingState.PRESSBUTTON;
 	Context context;
 	public BasicRecorder(){
@@ -38,7 +45,7 @@ public class BasicRecorder extends Activity {
 	
 	// OnClickListener for the record button
 	private OnClickListener recButListener = new OnClickListener() {
-	    public void onClick(View v) {
+	    public synchronized void onClick(View v) {
 	    	TextView txtV = (TextView)findViewById(R.id.txtIns);
 	    	Chronometer chronos = (Chronometer)findViewById(R.id.chronos);
 	    	chronos.stop();
@@ -47,11 +54,36 @@ public class BasicRecorder extends Activity {
 	    		state = RecordingState.REC;
 	    		chronos.setBase(android.os.SystemClock.elapsedRealtime());
 	    		chronos.start();
-	    		//Record
 	    		
+	    		//FileName is for a file in the public directory
+	    		String outName = "testing.mp4";
+	    		//File pubRecFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MUSIC);
+	    		//pubRecFile = new File(pubRecFile,outName);
+	    		
+	    		try {	    			
+		    		FileOutputStream recFile = openFileOutput(outName,Context.MODE_PRIVATE);//new FileOutputStream(pubRecFile);
+	    			
+		    		//Record
+		    		mRec = new MediaRecorder();
+		    		mRec.setAudioSource(MediaRecorder.AudioSource.VOICE_RECOGNITION);
+		    		mRec.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+		    		mRec.setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT);
+		    		mRec.setMaxDuration(2*60*1000);
+		    		mRec.setOutputFile(recFile.getFD());
+		    		mRec.prepare();
+		    		mRec.start();
+	    		} catch (IOException ioe) {
+	    			state = RecordingState.PRESSBUTTON;
+		    		chronos.setBase(android.os.SystemClock.elapsedRealtime());
+		    		chronos.stop();
+	    			mRec = null;
+	    		}
 	    		
 	    	} else if (state == RecordingState.REC) {
-	    		
+	            mRec.stop();
+	            mRec.release();
+	            mRec = null;
+	            
 	    		state = RecordingState.PLAY;
 	    		txtV.setText(state.getString(context));
 	    		
@@ -82,7 +114,7 @@ public class BasicRecorder extends Activity {
 		
 		
 		DialogInterface.OnClickListener alertClickListener = new DialogInterface.OnClickListener() {	
-			public void onClick(DialogInterface dia, int what) {		
+			public synchronized void onClick(DialogInterface dia, int what) {		
 			}
 		};
 		alert.setNeutralButton(R.string.OK, alertClickListener);
